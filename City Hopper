@@ -1,0 +1,807 @@
+import pygame
+import os
+import random
+
+
+pygame.init()
+#Window Dimensions
+W = 500
+L = 500
+
+gamescreen = pygame.display.set_mode((L,W))
+pygame.display.set_caption("Game")
+clock = pygame.time.Clock()
+#Player Dimensions
+PlayerL = 25
+#Player Health
+PHealth = 100
+
+#Damage
+Damage = 0
+
+#Game States
+
+Menu= 0
+Start = 1
+Paused = 2
+Leave = 3
+Game_Over = 4
+Level2 = 5
+
+game_state = Menu
+
+#keys
+Play = 0
+Pause = 1
+Quit = 2
+Left = 3
+Right = 4
+Jump = 5
+Down = 6
+Catch = 7
+Summon = 8
+
+#Background Images
+BG = pygame.transform.scale(pygame.image.load(os.path.join( "BackGroundImg","Kuriboh.png")), (L,W))
+BG2 = pygame.transform.scale(pygame.image.load(os.path.join( "BackGroundImg","Skyscraper-Field.jpg")), (L,W))
+BG3 = pygame.transform.scale(pygame.image.load(os.path.join("BackGroundImg", "Space-Image.jpg")), (L,W))
+BG4 = pygame.transform.scale(pygame.image.load(os.path.join( "BackGroundImg","Graveyard.jpg")), (L,W))
+BG5 =  pygame.transform.scale(pygame.image.load(os.path.join( "BackGroundImg","Big-Insect.jpg")), (L,W))
+BG6 =  pygame.transform.scale(pygame.image.load(os.path.join( "BackGroundImg","Dark City.jpg")), (L,W))
+
+#Initializing game state and Pressed
+game_state = Menu
+
+pressed = [False, False, False, False, False, False, False, False, False]
+
+#player starting position
+xpos = 100
+ypos = 400
+Vx= 0
+Vy = 0
+xposLC = xpos
+yposLC = ypos
+#player variables
+LeftTF = False
+RightTF = True
+#Capture Mechanics
+captured = [False, False, False, False]
+
+Hit = False
+Hit2 = False
+
+#Capture Type
+Null = 0
+RiseEnemy = 1
+shootEnemy = 2
+spikeEnemy = 3
+
+captured = Null
+
+#Summoning Variables
+summoning = True
+SMIncrease = 1
+RiseLimit = yposLC - 10
+LowerLimit = yposLC + 10
+
+#Platform Variables
+Plx = 200
+Ply = 450
+PlM = -1
+Plx2 = 250
+Ply2 = 300
+PlM2 = -1
+
+#Ball Variables
+ballx = 0
+bally = 0
+ball  = False
+
+#Counters
+counterB = 0
+counterGO = 0
+counterBG = 0
+counterE1 = 0
+counterDamage =0
+counterBD = 0
+counterPl = 0
+counterPl2 = 0
+counterPr = False
+counterPr2 = 0
+counterSE = 0
+counterSM1 = 0
+
+#Enemy Vaiable
+#rising enemy
+EHealth1 = 30
+XposE1 = 470
+YposE1 = 455
+Increase1 = 1
+DamageTF = False
+
+#shoot enemy
+EHealth2 = 15
+XposE2 = 350
+YposE2 = 110
+Projectile = XposE2
+
+#spike enemy
+EHealth3 = 20
+XposE3 = 250
+YposE3 = 200
+spike = False
+
+#Enemy Vairables 2
+EHealth1LC = EHealth1
+EHealth2LC = EHealth2
+EHealth3LC = EHealth3
+#Pause Related
+PauseType = 1
+PausecounterE1 = 0
+PauseXposE1 = 245
+PauseYposE1 = 100
+PauseIncrease1 = 1
+PauseProjectile = 245
+PauseXposE2 = 245
+PauseYposE2 = 100
+PausecounterSE = 0
+PauseXposE3 = 245
+PauseYposE3 = 100
+Pausespike = False
+
+#gravity
+isOnGround = False
+
+#Platform
+LV2Pl = 100
+
+#Font-----------------------------------------------------------------
+font = pygame.font.SysFont("comicsansms", 18)
+font2 = pygame.font.SysFont("comicsansms", 15)
+BigFont = pygame.font.SysFont("comicsansms",40)
+HFont = pygame.font.SysFont("comicsansms",55)
+EHFont = pygame.font.SysFont("comicsnsms",18)
+
+#Text
+text1 = font.render("To Start screen. press S to play.", True, (0, 10, 0))
+text2 = font2.render("During gameplay press P to Pause and C to throw a ball", True, (10, 255, 10))
+MText3 = font2.render("Press SPACE to change imgage", True,(255,255,255))
+PauseText = font.render("Press S to unpause, and Q to quit.",True, (255,255,255))
+QuitScreenT = font.render("Press Space to Leave code, Press P to return to Pause",True,(240,240,240))
+GameOverText = BigFont.render("GAME OVER",True,(0,10,0))
+
+
+#gameloop start
+
+gameloop = False;
+
+
+while not gameloop:
+ clock.tick(60)
+
+ for event in pygame.event.get():
+   if event.type == pygame.QUIT:
+     gameloop = True
+
+#key setup----------------------------------------------
+ keys = pygame.key.get_pressed()
+
+ if keys[pygame.K_s]:
+   pressed[Play] = True
+ else:  
+   pressed[Play] = False
+
+ if keys[pygame.K_p]:
+   pressed[Pause] = True 
+ else:
+   pressed[Pause] = False
+
+ if keys[pygame.K_q]:
+   pressed[Quit] = True    
+ else:
+   pressed[Quit] = False
+
+ if keys[pygame.K_LEFT] and xpos > 0 or keys[pygame.K_a] and xpos > 0:
+    pressed[Left] = True
+    if counterB < 1:
+     LeftTF = True
+     RightTF = False
+ else:
+   pressed[Left] = False
+
+ if keys[pygame.K_RIGHT] and xpos + PlayerL  < 500 or keys[pygame.K_d] and xpos + PlayerL  < 500:
+   pressed[Right] = True
+   if counterB < 1:
+    LeftTF = False
+    RightTF = True
+ else:
+   pressed[Right] = False
+
+ if keys[pygame.K_UP] or keys[pygame.K_w]:
+   pressed[Jump] = True
+ else:
+   pressed[Jump] = False
+
+ if keys[pygame.K_DOWN] and ypos < 490 or keys[pygame.K_s] and ypos < 490:
+   pressed[Down] = True
+ else:
+   pressed[Down] = False   
+
+ if keys[pygame.K_c] or keys[pygame.K_1]:
+   if ball == False:
+    pressed[Catch] = True
+ else:
+   pressed[Catch] = False
+
+ if keys[pygame.K_SPACE]:   
+   pressed[Summon] = True
+ else:
+   pressed[Summon] = False
+
+ #Game States ---------------------------------------------------------
+
+ if game_state == Menu:  
+   
+   if pressed[Play] == True:
+     game_state = Start     
+   if pressed[Quit] == True:
+     pygame.quit()  
+   if pressed[Summon] == True:
+    counterBG += 1
+    if counterBG >= 40:
+      BGcounter = 0
+
+ if game_state == Start:
+   PauseType = 1
+   #actions
+   if pressed[Pause]== True: 
+     game_state = Paused
+   if pressed[Left]== True or  pressed [Right] == True: 
+    if pressed[Left] == True and 0 <= xpos:
+     Vx = -3
+     #if xpos < 0:
+      #Vx = 0
+    if pressed[Right] == True and xpos + PlayerL  < 500:
+     Vx = 3
+   else:
+     Vx = 0  
+     #Actions
+   if pressed[Jump] == True:
+     if isOnGround == True:
+      Vy -= 5
+   if pressed[Down] == True and ypos < 490:
+     Vy += 5
+   if pressed[Catch] == True:
+     counterB = 0
+     ballx = xpos
+     bally = ypos
+     ball = True
+   if pressed[Summon] == True: 
+     xposLC = xpos
+     yposLC = ypos
+     RiseLimit = yposLC - 10
+     LowerLimit = yposLC + 10
+     summoning = True
+   if summoning == True:
+     if captured == Null:
+       summoning = False  
+     if captured == RiseEnemy:
+       pygame.draw.rect(gamescreen,(80,255,20),(xposLC,yposLC,15,30))
+       counterSM1 += 1
+       if counterSM1 >= 2:
+        yposLC += SMIncrease
+        counterSM1 = 0
+       if yposLC > LowerLimit:
+        SMIncrease1  = -1
+       if yposLC < RiseLimit:
+        SMIncrease1 = 1  
+       
+
+   if ball == True:
+    counterB += 1
+   #player movement 
+   xpos += Vx
+   ypos += Vy 
+   if PHealth <= 0:
+     game_state = Game_Over
+  #gravity---------------------------------------------------  
+   if ypos >= 500-25 : #check if your feet are on the ground
+        isOnGround = True
+        playerY = 500 -25
+        Vy = 0 
+   else:
+        isOnGround = False
+  #Platform 1
+   if xpos + PlayerL > 300 and xpos < 340 and ypos + PlayerL >= 475 and ypos < 490:
+     isOnGround = True
+     Vy = 0
+  #Platform 2   
+   if xpos + PlayerL > 400 and xpos < 500 and ypos + PlayerL >= 100 and ypos < 130:
+     isOnGround = True
+     Vy = 0  
+  #Rising Platform
+   if xpos + PlayerL > Plx and xpos < Plx + 40 and ypos + PlayerL >= Ply and ypos < Ply :
+     isOnGround = True
+     Vy = 0
+     onPlatform = True 
+     
+   else:
+    onPlatform = False   
+  #Rising Platform2
+   if xpos + PlayerL > Plx2 and xpos < Plx2 + 40 and ypos + PlayerL >= Ply2 and ypos < Ply2:
+     isOnGround = True
+     Vy = 0
+     onPlatform2 = True  
+
+   else:
+     onPlatform2 = False  
+
+  #Hazard
+   if xpos + PlayerL >=20 and xpos <= 50 and ypos + PlayerL >= 490 and ypos + PlayerL <= 500:
+     Damage = 5
+     PHealth -= Damage
+     Damage = 0
+
+  #Enemy Variable
+   if ypos + PlayerL > YposE2 -5 and ypos  < YposE2 +10 + 5:
+     shoot = True   
+   else:
+     shoot = False   
+
+  #Enemy Damage
+   if xpos + PlayerL > XposE1 and xpos < XposE1 +15 and ypos > YposE1 and ypos  < YposE1 + 30:
+     if EHealth1 > 0:
+      Damage = 1
+      counterDamage +=1
+      if counterDamage > 3:
+       PHealth -= Damage
+       counterDamage = 0
+
+   #if ball hits Enemy 1 or 2  
+   if ballx + 20 > XposE1 and ballx < XposE1 + 15 and bally + 20 > YposE1 and bally < YposE1 + 30 or ballx + 20 > XposE2 and ballx < XposE2 + 10 and bally + 20 > YposE2 and bally < YposE2 + 10:  
+     counterBD += 1
+     DamageTF = True
+   if DamageTF == True:
+
+     # if it hits Enemy 1
+     if counterBD > 3 and ballx + 20 > XposE1 and ballx < XposE1 + 15 and bally + 20 > YposE1 and bally < YposE1 + 30 and ball == True:
+      Hit = True
+      EHealth1 -= 1  
+      counterBD = 0
+      
+      
+     # if it hits Enemy 2 
+     if counterBD > 3 and ballx + 20 > XposE2 and ballx < XposE2 + 10 and bally + 20 > YposE2 and bally < YposE2 + 10 and ball == True:
+       Hit2 = True
+       EHealth2 -= 1.5
+       counterBD = 0
+
+   if Hit == True and DamageTF == False:
+        if EHealth1 <= 0:
+          captured = RiseEnemy
+        Hit = False  
+        EHealth1LC = EHealth1
+
+   if Hit2 == True and DamageTF == False:
+        if EHealth2 <= 0:
+          captured = shootEnemy
+        Hit2 = False 
+        EHealth2LC = EHealth2          
+
+   else:#if it doesn't hit or the ball ins't active
+     DamageTF = False
+     
+
+   
+   if xpos + PlayerL > 498 and ypos + PlayerL <= 102:
+     xpos = 20
+     game_state = Level2      
+
+#Gravitational Pull-------------------------------------------- 
+   if isOnGround == False:
+        Vy+=.2 #GRAVITY if not on ground, fall downwards  
+
+#Level2---------------------Level2-------------------------------------------
+#---------------------------------------------------------------Level 2
+
+ if game_state == Level2:
+   PauseType = 2
+   if pressed[Pause]== True: 
+     game_state = Paused
+   if pressed[Left]== True or  pressed [Right] == True: 
+    if pressed[Left] == True and 0 <= xpos:
+     Vx = -3
+     #if xpos < 0:
+      #Vx = 0
+    if pressed[Right] == True and xpos + PlayerL  < 500:
+     Vx = 3
+     #if xpos + PlayerL > 500:
+       #Vx = 0
+   else:
+     Vx = 0  
+     #Actions
+   if pressed[Jump] == True:
+     if isOnGround == True:
+      Vy -= 5
+   if pressed[Down] == True and ypos < 490:
+     Vy += 5
+   if pressed[Catch] == True:
+     counterB = 0
+     ballx = xpos
+     bally = ypos
+     ball = True
+   if pressed[Summon] == True: 
+     summoning = True
+   if ball == True:
+    counterB += 1
+   #player movement 
+   xpos += Vx
+   ypos += Vy 
+   if PHealth <= 0:
+     game_state = Game_Over
+
+
+   #Enemies---------------------------------------------------------------Enemies
+
+   if ballx + 20 > XposE3 and ballx < XposE3 + 15 and bally + 15 > 180 and bally < 200 and spike == True:
+     EHealth3 -= 1
+     Hit = True
+   elif ballx + 20 > XposE3 and ballx < XposE3 + 15 and bally + 15 > YposE3 and bally < YposE3 + 15: 
+     EHealth3 -= 5 
+     Hit = True
+   else:
+     DamageTF = False 
+
+
+
+   if Hit == True and DamageTF == False:  
+     
+     if EHealth3 <= 0:
+          captured = spikeEnemy      
+     Hit = False  
+     EHealth3LC = EHealth3
+
+
+
+   #gravity---------------------------------------------------  
+   if ypos >= 500-25 : #check if your feet are on the ground
+        isOnGround = True
+        playerY = 500 -25
+        Vy = 0 
+   else:
+        isOnGround = False  
+   #Platform     
+   if xpos + PlayerL >= 0 and xpos <= LV2Pl and ypos + PlayerL >= 100 and ypos + PlayerL < 120:
+     isOnGround = True
+     Vy = 0       
+   #Platform2 red  
+   if xpos + PlayerL >= 50 and xpos <= 500 and ypos + PlayerL >= 200 and ypos < 230:
+     isOnGround = True
+     Vy = 0       
+
+   #(50,200,450,30)  
+   if isOnGround == False:
+        Vy+=.2 #GRAVITY if not on ground, fall downward    
+   #Switch back to level 1      
+   if xpos <= 1 and ypos > 0 and ypos + PlayerL <= 101:
+     xpos += 450
+     game_state = Start
+
+
+#game states----------------------------------------------------
+# Pause-------------------------------------------------Pause
+ if game_state == Paused:
+
+   if pressed[Play] == True: 
+     if PauseType == 1:
+      game_state = Start 
+     if PauseType == 2:
+      game_state = Level2  
+      
+   if pressed[Quit] == True:   
+     game_state = Leave
+# Leave--------------------------------------------------Leave
+ if game_state == Leave:
+   if pressed[Summon] == True:
+     pygame.quit()
+   if pressed[Pause] == True:
+     game_state = Paused  
+
+#Game over------------------------------------------------------Game Over-------------
+ if game_state == Game_Over:
+   counterGO += 1    
+   if counterGO >= 600:
+     #resets variables to thier initial state
+     counterGO = 0
+     PHealth = 100
+     EHealth1 = 30
+     EHealth2 = 15
+     game_state = Menu
+     xpos = 100
+     ypos = 400
+     spike = False
+     counterSE = 0
+     EHealth3 = 20
+     captured = Null
+
+   #Render Section ------------------------------------------------------------------
+   #-------------------------------------------------------Render Section------------
+  
+ if game_state == Menu:
+   #if counterBG is less than a certain amount take that path and only that path
+   if counterBG < 10:  
+    gamescreen.blit(BG, (0,0))
+   elif counterBG < 20: 
+     gamescreen.blit(BG2, (0,0))
+   elif counterBG < 30:
+     gamescreen.blit(BG3, (0,0))  
+   elif counterBG < 40:
+     gamescreen.blit(BG4, (0,0)) 
+   elif counterBG < 50:
+     gamescreen.blit(BG5,(0,0))   
+   #if counterBG is more than a certain amount, reset  
+   elif counterBG >50:
+     counterBG = 0  
+   gamescreen.blit(text1,(100, 100))
+   gamescreen.blit(text2,(150, 150))
+   gamescreen.blit(MText3, (250,350))
+
+   #Level 1 ------------------------------------------------------------------------- --------------------------------------------------------------------Level 1
+ elif game_state == Start:
+   gamescreen.fill((25,55,255))
+   gamescreen.blit(BG2, (0,0))
+
+   #player
+   pygame.draw.rect(gamescreen,(200,100,50),(xpos,ypos,25,25))
+
+   #Player Health display
+   if PHealth >=60:
+    HText = HFont.render(str(PHealth),1,(0,0,255))
+   elif PHealth >=35: 
+    HText = HFont.render(str(PHealth),1,(250,255,5))
+   elif PHealth <=34:
+    HText = HFont.render(str(PHealth),1,(120,0,0)) 
+   gamescreen.blit(HText,(0,0))
+
+   #Platform
+   pygame.draw.rect(gamescreen,(255,0,10),(300,475,40,15))
+
+   # Stationary Platform
+   pygame.draw.rect(gamescreen,(10,100,10),(400,100,100,20))
+
+   #Rising Platform
+   pygame.draw.rect(gamescreen,(110,165,135),(Plx,Ply,40,20))
+   counterPl += 1
+   if counterPl >=2:
+     Ply += PlM
+     counterPl = 0
+     if onPlatform == True:
+      ypos += PlM
+   if Ply <= 350:
+     PlM = 1
+   if Ply  >= 450:
+     PlM = -1
+   #Risng Platform 2
+   pygame.draw.rect(gamescreen,(110,165,135),(Plx2,Ply2,40,20))
+   counterPl2 += 1
+   if counterPl2 >= 1:
+     Ply2 += PlM2
+     counterPl2 = 0
+     if onPlatform2 == True:
+       ypos += PlM2
+   if Ply2 <= 100:
+      PlM2 = 1
+   if Ply2 >= 360:
+      PlM2 = -1    
+
+
+
+   #Hazard
+   pygame.draw.rect(gamescreen,(80,20,20),(20,490,30,10))
+
+   #Enemy
+   if EHealth1 >= 1:
+    pygame.draw.rect(gamescreen,(80,255,20),(XposE1,YposE1,15,30))
+    #display Health
+    if (EHealth1 >= 10):
+     EHText = EHFont.render(str(EHealth1),1,(150,255,150))
+    if (EHealth1 < 10): 
+     EHText = EHFont.render(str(EHealth1),1,(250,100,100)) 
+    gamescreen.blit(EHText,(XposE1,YposE1 - 20))
+    
+    counterE1 += 1
+    if counterE1 >= 2:
+     YposE1 += Increase1
+     counterE1 = 0
+    if YposE1 > 465:
+      Increase1  = -1
+    if YposE1 < 445:
+      Increase1 = 1  
+
+   #Enemy2
+   if EHealth2 >=1:
+     pygame.draw.rect(gamescreen,(70,0,0),(XposE2,YposE2,10,10))  
+     #Display Health
+     if (EHealth2 >= 6):
+       EHText2 = EHFont.render(str(EHealth2),1,(150,255,150))
+     if (EHealth2 < 6):
+       EHText2 = EHFont.render(str(EHealth2),1,(250,100,100))
+       
+     gamescreen.blit(EHText2,(XposE2,YposE2 - 20))  
+     if shoot == True:
+       
+       counterPr = True
+       
+     if counterPr == True:
+       counterPr2 += 1
+       Projectile -= 2
+       pygame.draw.circle(gamescreen,(255,255,0),(Projectile,YposE2),5)
+       if xpos + PlayerL > Projectile -5 and xpos < Projectile + 5 and ypos + PlayerL >YposE2 - 5 and ypos < YposE2 +5:
+         PHealth -= .5
+         Vx *.9
+       if counterPr2 > 120:
+         counterPr = False
+         counterPr2 = 0
+         Projectile = XposE2
+
+
+   #ball
+   #when counterB is greater than 0, draw the ball to the screen, add 2 to ballx every time, 
+   if counterB > 0:
+     pygame.draw.rect(gamescreen,(100,100,100),(ballx,bally,20,20))
+     #this is to check where the player is facing
+     if RightTF == True:
+      ballx += 2
+     if LeftTF == True:
+      ballx -=2
+  #if counterB is greater than or equal to 50, set counterB to 0 and ball to false
+     if counterB >= 50:
+       counterB = 0
+       ball = False
+
+#Level 2---------------------------------------------------------------------------- ---------------------------------------------------------------------------Level 2
+ elif  game_state == Level2:
+   
+   gamescreen.blit(BG6, (0,0))
+
+   #player
+   pygame.draw.rect(gamescreen,(200,100,50),(xpos,ypos,25,25))
+
+   #Player Health display
+   HText = HFont.render(str(PHealth),1,(0,0,255))
+   gamescreen.blit(HText,(0,0))
+
+    #ball
+   #when counterB is greater than 0, draw the ball to the screen, add 2 to ballx every time, 
+   if counterB > 0:
+     pygame.draw.rect(gamescreen,(100,100,100),(ballx,bally,20,20))
+     if RightTF == True:
+      ballV = 2
+      
+     
+     if LeftTF == True:
+      ballV = -2
+     ballx += ballV
+  #if counterB is greater than or equal to 50, set counterB to 0 and ball to false
+     if counterB >= 50:
+       counterB = 0
+       ball = False
+
+   #Platform
+   pygame.draw.rect(gamescreen,(25,25,100),(0,100,LV2Pl,30))
+   if ypos <= 80 and pressed[Right]== True and xpos + PlayerL <= 450 and xpos + PlayerL >= 100:
+     LV2Pl += 3
+   if ypos <= 80 and pressed[Left] == True and xpos + PlayerL >= 100:
+     LV2Pl -= 3  
+   #Platform 2
+   pygame.draw.rect(gamescreen,(150,20,20),(50,200,450,30)) 
+
+   #Enemy ---------------
+   if EHealth3 > 0:
+    pygame.draw.rect(gamescreen,(150,0,150),(XposE3,YposE3,15,15))
+    if (EHealth3 >= 6):
+       EHText3 = EHFont.render(str(EHealth3),1,(150,255,150))
+    if (EHealth3 < 6):
+       EHText3 = EHFont.render(str(EHealth3),1,(250,100,100))
+       
+    gamescreen.blit(EHText3,(XposE3,YposE3))  
+    if xpos + PlayerL > 230 and xpos < 285 and  ypos + PlayerL >= 200 and ypos < 230 and counterSE < 2:
+      spike = True
+    if spike == True:
+     counterSE += 1  
+    if spike == True and counterSE < 120:
+     #spike
+     pygame.draw.polygon(gamescreen,(200,200,200),((250,200),(265,200),(260,180)))
+
+ #checks if the player has made contact with the spike
+
+    if spike == True and xpos < XposE3 + 15 and xpos + PlayerL > XposE3 and ypos < 200 and ypos + PlayerL > 180 and counterSE < 10:
+      PHealth -= 5  
+
+    if spike == True and xpos < XposE3 + 15 and xpos + PlayerL > XposE3 and ypos < 200 and ypos + PlayerL > 180 and counterSE < 120 and counterSE > 10:  
+      PHealth -= 1
+
+ #This for a spike cooldown   
+
+    if spike == True and counterSE > 240:   
+      counterSE = 0
+      spike = False 
+   else:
+     spike = False
+     counterSE = 0   
+
+   
+
+
+ elif game_state == Paused:
+    gamescreen.fill((100,100,100))      
+    gamescreen.blit(PauseText,(50,50))
+    #Prints out whats currently captured
+    if captured == Null:
+      #Changes what PauseText is equal to
+      PauseText2 = font.render(" Capture Type: None",True, (255,255,255))
+    if captured == RiseEnemy:
+      #Changes what PauseText is equal to
+      PauseText2 = font.render(" Capture Type: Rise Enemy",True, (255,255,255))
+      #draws to the screen what the Enemy is and does what it normally does
+      pygame.draw.rect(gamescreen,(80,255,20),(PauseXposE1,PauseYposE1-5,15,30))
+      #modified code from the game loop
+      PausecounterE1 += 1
+    if PausecounterE1 >= 2:
+     PauseYposE1 += PauseIncrease1
+     PausecounterE1 = 0
+    if PauseYposE1 > 105:
+      PauseIncrease1  = -1
+    if PauseYposE1 < 85:
+      PauseIncrease1 = 1  
+
+    #prints code regareding to the enemy that fires projectiles
+    if captured == shootEnemy:
+      #Changes what PauseText is equal to
+      PauseText2 = font.render(" Capture Type: Shoot Enemy",True, (255,255,255))  
+
+      #code that draws the enemy to the screen and code for it's Projectile
+      pygame.draw.rect(gamescreen,(70,0,0),( 245,100,10,10))  
+      PauseProjectile += 2
+      pygame.draw.circle(gamescreen,(255,255,0),(PauseProjectile,PauseYposE2),5)
+      if PauseProjectile > 500:
+        PauseProjectile = PauseXposE2
+
+    if captured == spikeEnemy:
+
+      PauseText2 = font.render(" Capture Type: Spike  Enemy",True, (255,255,255))  
+
+      pygame.draw.rect(gamescreen,(150,0,150),(PauseXposE3,PauseYposE3,15,15))
+      if  PausecounterSE < 2:
+       Pausespike = True
+      if Pausespike == True:
+       PausecounterSE += 1  
+      if Pausespike == True and PausecounterSE < 10:
+        pygame.draw.polygon(gamescreen,(200,200,200),((PauseXposE3,PauseYposE3),(PauseXposE3 + 10,PauseYposE3 - 10),(PauseXposE3 + 15,PauseYposE3))) 
+      if Pausespike == True and PausecounterSE < 120 and PausecounterSE > 10:
+        pygame.draw.polygon(gamescreen,(200,200,200),((PauseXposE3,PauseYposE3),(PauseXposE3 + 10,PauseYposE3 - 20),(PauseXposE3 + 15,PauseYposE3)))
+ #This for a spike cooldown   
+      if Pausespike == True and PausecounterSE > 240:   
+        PausecounterSE = 0
+        Pausespike = False 
+      
+    gamescreen.blit(PauseText2,(50,100))
+    
+ 
+ #when game state = leave print to the screen a background image and text
+ elif game_state == Leave:
+    gamescreen.blit(BG3, (0,0))
+    gamescreen.blit(QuitScreenT,(75,75))
+
+ #when game state = game over, print game over background and text
+ elif game_state == Game_Over:
+   gamescreen.blit(BG4, (0,0))   
+   gamescreen.blit(GameOverText, (230,20))
+
+
+
+
+ pygame.display.flip()
+
+pygame.quit();
+        
