@@ -1,0 +1,9 @@
+The project was live for the majority of the month of May in 2021. It started on April 28, 2021 and ended on May 21, 2021.
+The original end goal of the project was to have a game where you catch robots and use them to fight other robots, and I planned on having 3 levels. After working on the project for a while I added more details to game states and made it more about platforming.
+I would say it’s very close to my original vision and I just didn’t have enough time to code certain features in. It’s different in that I’m using shapes and background images as the style of the game.
+I’m happy with what I’ve made in the amount of time I’ve had to make it. I do think my game is a good product considering how much time I had to make it.
+I think I worked well in my group of one.
+What worked well with the project was with coding and tracking my time, since I didn’t have that many issues with either of them. What didn’t work well was updating the trello board because oftentimes I just didn’t use it.
+During the project I didn’t really learn anything new, but I did straighten my understanding on certain things in python like background images and game states.
+My next goal is having the enemy caught be able to be summoned to the screen after you press the summon button and that will be the last thing I work on this project.
+If I do this again I’m going to put more thought into the level layout by drawing out what I plan for the level before I code it in. Also I might try and use backgrounds for the platforms.
